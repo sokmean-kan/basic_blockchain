@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="001-1-create-users-sequence" author="sokmean">
+        <createSequence
+                sequenceName="users_seq"
+                startValue="1"
+                incrementBy="50"/>
+    </changeSet>
+
+    <changeSet id="001-create-users-table" author="sokmean">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="users"/>
+            </not>
+        </preConditions>
+        <createTable tableName="users">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="username" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="publicKey" type="VARCHAR(200)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    </databaseChangeLog>

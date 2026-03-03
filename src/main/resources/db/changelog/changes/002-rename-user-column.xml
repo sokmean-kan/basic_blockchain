@@ -1,0 +1,20 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-rename-user-column" author="sokmean">
+        <renameColumn
+                tableName="users"
+                oldColumnName="publicKey"
+                newColumnName="public_key"
+                columnDataType="VARCHAR(255)"/>
+    </changeSet>
+    <changeSet id="2026-02-01-increase-public-key-length" author="you">
+        <modifyDataType
+                tableName="users"
+                columnName="public_key"
+                newDataType="VARCHAR(512)"/>
+    </changeSet>
+</databaseChangeLog>

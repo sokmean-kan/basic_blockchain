@@ -1,0 +1,24 @@
+server:
+  port: ${PORT:8988} #PORT is a variable in docker-compose.yml
+
+spring:
+  application:
+    name: "basic-blockchain"
+  datasource:
+    url: jdbc:postgresql://localhost:5432/basic_blockchain?currentSchema=public
+    username: sokmean
+    password: 12345
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+    default-schema: public
+    liquibase-schema: public
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql=true: true
+    database-platform: "org.hibernate.dialect.PostgreSQLDialect"

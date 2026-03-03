@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    ports:
+      - "9090:8088" #assign port point to real port run with app(8088)
+    environment:
+      - PORT=8088 #define as variable use in application.yml(if used, the right port above must be the same)
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/basic_blockchain
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=12345
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=basic_blockchain
+      - POSTGRES_PASSWORD=12345
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
