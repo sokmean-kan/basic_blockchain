@@ -28,7 +28,7 @@ class EncryptionService(
         val encryptedBytes = cipher.doFinal(data.toByteArray())
         return Base64.getEncoder().encodeToString(encryptedBytes)
     }
-
+//decrypt
     fun decrypt(username: String, privateKeyStr: String, encryptedData: String): String {
         userRepository.findByUsername(username)
             ?: throw ResourceNotFoundException("User not found: $username")
