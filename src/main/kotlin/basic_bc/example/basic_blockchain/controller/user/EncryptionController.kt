@@ -2,7 +2,6 @@ package basic_bc.example.basic_blockchain.controller.user
 
 import basic_bc.example.basic_blockchain.dto.request.DecryptRequest
 import basic_bc.example.basic_blockchain.dto.request.EncryptRequest
-import basic_bc.example.basic_blockchain.dto.response.DecryptResponse
 import basic_bc.example.basic_blockchain.dto.response.EncryptResponse
 import basic_bc.example.basic_blockchain.service.EncryptionService
 import jakarta.validation.Valid
@@ -18,7 +17,7 @@ class EncryptionController(private val encryptionService: EncryptionService) {
 
     @PostMapping("/encrypt")
     fun encrypt(@Valid @RequestBody request: EncryptRequest)
-    :ResponseEntity<EncryptResponse>{
+            : ResponseEntity<EncryptResponse> {
         val encryptedData = encryptionService.encrypt(request)
         return ResponseEntity.ok(EncryptResponse(request.username, encryptedData))
     }
