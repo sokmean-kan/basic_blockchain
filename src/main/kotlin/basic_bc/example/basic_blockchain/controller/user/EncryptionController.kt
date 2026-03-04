@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 class EncryptionController(private val encryptionService: EncryptionService) {
 
     @PostMapping("/encrypt")
-    fun encrypt(@Valid @RequestBody request: EncryptRequest): ResponseEntity<EncryptResponse> {
-        val encryptedData = encryptionService.encrypt(request)
-        return ResponseEntity.ok(EncryptResponse(request.username, encryptedData))
-    }
+    fun encrypt(@Valid @RequestBody request: EncryptRequest)= encryptionService.encrypt(request)
 
     @PostMapping("/decrypt")
     fun decrypt(@Valid @RequestBody request: DecryptRequest) = encryptionService.decrypt(request) //: ResponseEntity<DecryptResponse> {

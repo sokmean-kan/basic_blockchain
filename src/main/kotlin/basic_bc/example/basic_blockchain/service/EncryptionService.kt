@@ -3,6 +3,7 @@ package basic_bc.example.basic_blockchain.service
 import basic_bc.example.basic_blockchain.dto.request.DecryptRequest
 import basic_bc.example.basic_blockchain.dto.request.EncryptRequest
 import basic_bc.example.basic_blockchain.dto.response.DecryptResponse
+import basic_bc.example.basic_blockchain.dto.response.EncryptResponse
 import basic_bc.example.basic_blockchain.exception.ResourceNotFoundException
 import basic_bc.example.basic_blockchain.repository.UserKeyRepository
 import org.springframework.http.ResponseEntity
@@ -18,7 +19,7 @@ class EncryptionService(
     private val userRepository: UserKeyRepository
 ) {
 
-    fun encrypt(request: EncryptRequest): String {
+    fun encrypt(request: EncryptRequest): ResponseEntity<EncryptResponse> {
         val user = userRepository.findByUsername(request.username)
             ?: throw ResourceNotFoundException("User not found: ${request.username}")
 
@@ -30,7 +31,11 @@ class EncryptionService(
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
         val encryptedBytes = cipher.doFinal(request.data.toByteArray())
-        return Base64.getEncoder().encodeToString(encryptedBytes)
+        val result = Base64.getEncoder().encodeToString(encryptedBytes)
+        return ResponseEntity.ok(EncryptResponse(
+            username = request.username,
+            encryptedData = result
+        ))
     }
 
     fun decrypt(request: DecryptRequest): ResponseEntity<DecryptResponse> {
@@ -40,7 +45,6 @@ class EncryptionService(
             val privateKeyBytes = Base64.getDecoder().decode(request.privateKey)
             val privateKey = KeyFactory.getInstance("RSA")
                 .generatePrivate(PKCS8EncodedKeySpec(privateKeyBytes))
-//                Algorithm
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
             val decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(request.encryptedData))
