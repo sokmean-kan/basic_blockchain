@@ -19,7 +19,7 @@ class EncryptionService(
     private val userRepository: UserKeyRepository
 ) {
 
-    fun encrypt(request: EncryptRequest): ResponseEntity<EncryptResponse> {
+    fun encrypt(request: EncryptRequest):String {
         val user = userRepository.findByUsername(request.username)
             ?: throw ResourceNotFoundException("User not found: ${request.username}")
 
@@ -31,11 +31,12 @@ class EncryptionService(
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
         val encryptedBytes = cipher.doFinal(request.data.toByteArray())
-        val result = Base64.getEncoder().encodeToString(encryptedBytes)
-        return ResponseEntity.ok(EncryptResponse(
-            username = request.username,
-            encryptedData = result
-        ))
+//        val result =
+        return Base64.getEncoder().encodeToString(encryptedBytes)
+//        return ResponseEntity.ok(EncryptResponse(
+//            username = request.username,
+//            encryptedData = result
+//        ))
     }
 
     fun decrypt(request: DecryptRequest): ResponseEntity<DecryptResponse> {
