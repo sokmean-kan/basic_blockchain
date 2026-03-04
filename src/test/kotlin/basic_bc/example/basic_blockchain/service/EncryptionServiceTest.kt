@@ -1,5 +1,6 @@
 package basic_bc.example.basic_blockchain.service
 
+import basic_bc.example.basic_blockchain.dto.request.EncryptRequest
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 
@@ -9,6 +10,6 @@ class EncryptionServiceTest {
 
     @Test
     fun myFirstTest() {
-        encryptionService.encrypt("monalisa", "hello world")
+        encryptionService.encrypt(EncryptRequest("monalisa", "hello world"))
     }
 }

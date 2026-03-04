@@ -18,13 +18,13 @@ class EncryptionController(private val encryptionService: EncryptionService) {
 
     @PostMapping("/encrypt")
     fun encrypt(@Valid @RequestBody request: EncryptRequest): ResponseEntity<EncryptResponse> {
-        val encryptedData = encryptionService.encrypt(request.username, request.data)
+        val encryptedData = encryptionService.encrypt(request)
         return ResponseEntity.ok(EncryptResponse(request.username, encryptedData))
     }
 
     @PostMapping("/decrypt")
-    fun decrypt(@Valid @RequestBody request: DecryptRequest): ResponseEntity<DecryptResponse> {
-        val decryptedData = encryptionService.decrypt(request.username, request.privateKey, request.encryptedData)
-        return ResponseEntity.ok(DecryptResponse(request.username, decryptedData))
-    }
+    fun decrypt(@Valid @RequestBody request: DecryptRequest) = encryptionService.decrypt(request) //: ResponseEntity<DecryptResponse> {
+//        val decryptedData = encryptionService.decrypt(request)
+//        return ResponseEntity.ok(DecryptResponse(request.username, decryptedData))
+//    }
 }

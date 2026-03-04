@@ -1,7 +1,11 @@
 package basic_bc.example.basic_blockchain.service
 
+import basic_bc.example.basic_blockchain.dto.request.DecryptRequest
+import basic_bc.example.basic_blockchain.dto.request.EncryptRequest
+import basic_bc.example.basic_blockchain.dto.response.DecryptResponse
 import basic_bc.example.basic_blockchain.exception.ResourceNotFoundException
 import basic_bc.example.basic_blockchain.repository.UserKeyRepository
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.security.KeyFactory
 import java.security.spec.PKCS8EncodedKeySpec
@@ -14,9 +18,9 @@ class EncryptionService(
     private val userRepository: UserKeyRepository
 ) {
 
-    fun encrypt(username: String, data: String): String {
-        val user = userRepository.findByUsername(username)
-            ?: throw ResourceNotFoundException("User not found: $username")
+    fun encrypt(request: EncryptRequest): String {
+        val user = userRepository.findByUsername(request.username)
+            ?: throw ResourceNotFoundException("User not found: ${request.username}")
 
         val publicKeyBytes = Base64.getDecoder().decode(user.publicKey)
         val publicKey = KeyFactory.getInstance("RSA")
@@ -25,23 +29,24 @@ class EncryptionService(
         val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
 
-        val encryptedBytes = cipher.doFinal(data.toByteArray())
+        val encryptedBytes = cipher.doFinal(request.data.toByteArray())
         return Base64.getEncoder().encodeToString(encryptedBytes)
     }
 //decrypt
-    fun decrypt(username: String, privateKeyStr: String, encryptedData: String): String {
-        userRepository.findByUsername(username)
-            ?: throw ResourceNotFoundException("User not found: $username")
+    fun decrypt(request: DecryptRequest): ResponseEntity<DecryptResponse> {
+        userRepository.findByUsername(request.username)
+            ?: throw ResourceNotFoundException("User not found: ${request.username}")
 
         try {
-            val privateKeyBytes = Base64.getDecoder().decode(privateKeyStr)
+            val privateKeyBytes = Base64.getDecoder().decode(request.privateKey)
             val privateKey = KeyFactory.getInstance("RSA")
                 .generatePrivate(PKCS8EncodedKeySpec(privateKeyBytes))
 
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
-            val decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData))
-            return String(decryptedBytes)
+            val decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(request.encryptedData))
+            val result =  String(decryptedBytes)
+            return ResponseEntity.ok(DecryptResponse(request.username,result))
 
         }catch (e : Exception){
             throw ResourceNotFoundException(e.message)
