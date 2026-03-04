@@ -32,16 +32,15 @@ class EncryptionService(
         val encryptedBytes = cipher.doFinal(request.data.toByteArray())
         return Base64.getEncoder().encodeToString(encryptedBytes)
     }
-//decrypt
+
     fun decrypt(request: DecryptRequest): ResponseEntity<DecryptResponse> {
         userRepository.findByUsername(request.username)
             ?: throw ResourceNotFoundException("User not found: ${request.username}")
-
         try {
             val privateKeyBytes = Base64.getDecoder().decode(request.privateKey)
             val privateKey = KeyFactory.getInstance("RSA")
                 .generatePrivate(PKCS8EncodedKeySpec(privateKeyBytes))
-
+//                Algorithm
             val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
             cipher.init(Cipher.DECRYPT_MODE, privateKey)
             val decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(request.encryptedData))
