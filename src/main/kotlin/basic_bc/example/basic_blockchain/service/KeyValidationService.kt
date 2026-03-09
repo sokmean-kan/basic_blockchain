@@ -15,7 +15,7 @@ class KeyValidationService(
     private val userRepository: UserKeyRepository
 ) {
     fun validateAndSign(request: ValidateKeyRequest): SignatureResponse {
-        val user = userRepository.findByUsername(request.username)
+        val user = userRepository.findByUsernameIgnoreCase(request.username)
             ?: throw ResourceNotFoundException()
 
         val publicKey =  getPublicKeyFromBase64(user.publicKey)

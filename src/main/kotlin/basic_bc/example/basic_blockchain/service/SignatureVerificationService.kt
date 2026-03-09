@@ -18,7 +18,7 @@ class SignatureVerificationService(
 
     fun verifyAndGetUsername(request: VerifySignatureRequest): VerifiedSignatureResponse {
 
-        val user = userRepository.findByUsername(request.username)
+        val user = userRepository.findByUsernameIgnoreCase(request.username)
             ?: throw ResourceNotFoundException("User not found: ${request.username}")
 
         val storedPublicKeyBase64 = user.publicKey
