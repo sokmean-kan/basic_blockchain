@@ -31,6 +31,7 @@ class KeyPairService(
         val privateKey = Base64.getEncoder().encodeToString(keyPair.private.encoded) //encoded in PKCS#8
 
         val user = userRequest.toUser(publicKey)
+
         userKeyRepository.save(user)
 
         return KeyPairResponse(

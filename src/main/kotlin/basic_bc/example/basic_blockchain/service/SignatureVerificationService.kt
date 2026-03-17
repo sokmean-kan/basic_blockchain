@@ -51,7 +51,7 @@ class SignatureVerificationService(
         }
 
         return VerifiedSignatureResponse(
-            username = request.username,
+            verify = true,
             data = request.data
         )
     }

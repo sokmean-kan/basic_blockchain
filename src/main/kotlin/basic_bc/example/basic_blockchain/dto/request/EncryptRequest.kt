@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank
 data class EncryptRequest(
     @field:NotBlank("username is required")
     val username: String,
-    @field:NotBlank("password is required")
+    @field:NotBlank("data is required")
     val data: String
 )
 
