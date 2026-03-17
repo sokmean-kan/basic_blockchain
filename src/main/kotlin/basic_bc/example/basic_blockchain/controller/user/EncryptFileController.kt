@@ -1,6 +1,6 @@
 package basic_bc.example.basic_blockchain.controller.user
 
-import basic_bc.example.basic_blockchain.service.EncryptService
+import basic_bc.example.basic_blockchain.service.EncryptFileService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
@@ -13,7 +13,7 @@ import org.springframework.http.MediaType
 @CrossOrigin(origins = ["*"], allowedHeaders = ["*"])
 @RestController
 @RequestMapping(value = ["/api/file-encryption"])
-class EncryptController(private val encryptService: EncryptService) {
+class EncryptFileController(private val encryptService: EncryptFileService) {
 
     // Encrypt endpoint
     @PostMapping("/encrypt")

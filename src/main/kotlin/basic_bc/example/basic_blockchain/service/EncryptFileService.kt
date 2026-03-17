@@ -20,7 +20,7 @@ import java.util.UUID
 import javax.crypto.spec.SecretKeySpec
 
 @Service
-class EncryptService(private val userKeyRepository: UserKeyRepository) {
+class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
 
     private val storageDir = "encrypted-files"
 
