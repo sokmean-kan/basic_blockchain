@@ -3,7 +3,6 @@ package basic_bc.example.basic_blockchain.service
 import basic_bc.example.basic_blockchain.dto.request.DecryptRequest
 import basic_bc.example.basic_blockchain.dto.request.EncryptRequest
 import basic_bc.example.basic_blockchain.dto.response.DecryptResponse
-import basic_bc.example.basic_blockchain.dto.response.EncryptResponse
 import basic_bc.example.basic_blockchain.exception.ResourceNotFoundException
 import basic_bc.example.basic_blockchain.repository.UserKeyRepository
 import org.springframework.http.ResponseEntity
@@ -12,13 +11,10 @@ import java.security.KeyFactory
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.Signature
-import java.security.spec.MGF1ParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import javax.crypto.Cipher
-import javax.crypto.spec.OAEPParameterSpec
-import javax.crypto.spec.PSource
 
 @Service
 class EncryptionService(

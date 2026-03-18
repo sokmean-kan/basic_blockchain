@@ -52,4 +52,9 @@ class GlobalExceptionHandler {
         )
         return ResponseEntity(errorResponse, HttpStatus.NOT_FOUND)
     }
+    @ExceptionHandler(ErrorExceptionResponse::class)
+    fun errorExceptionResponse(ex: ErrorExceptionResponse): ResponseEntity<Status> {
+        val errorResponse = Status(errorCode = 3, errorMessage = ex.message ?: "Ruk ot see")
+        return ResponseEntity(errorResponse, HttpStatus.NOT_FOUND)
+    }
 }

@@ -22,8 +22,8 @@ spring:
       hibernate:
         format_sql=true: true
     database-platform: "org.hibernate.dialect.PostgreSQLDialect"
-#    CORS Origin block (CORS policy for frontEnd)
+#    CORS Origin block (CORS policy for frontEnd) needed if integrate with FE
   servlet:
     multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
+      max-file-size: 60MB
+      max-request-size: 60MB #default 50MB(Spring)

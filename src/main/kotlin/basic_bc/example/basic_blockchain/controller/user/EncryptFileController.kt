@@ -1,5 +1,6 @@
 package basic_bc.example.basic_blockchain.controller.user
 
+import basic_bc.example.basic_blockchain.dto.response.EncryptFileResponse
 import basic_bc.example.basic_blockchain.service.EncryptFileService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -20,9 +21,13 @@ class EncryptFileController(private val encryptService: EncryptFileService) {
     fun encrypt(
         @RequestParam("username") username: String,
         @RequestParam("file") file: MultipartFile
-    ): ResponseEntity<Map<String, String>> {
+    ): ResponseEntity<EncryptFileResponse> {
         val result = encryptService.encryptFile(username, file)
-        return ResponseEntity.ok(result)
+        val linkDownload = "http://localhost:8988/api/file-encryption/files/"
+        return ResponseEntity.ok(EncryptFileResponse(
+            encryptedKey =  result.encryptedKey,
+            encryptedFileLink = linkDownload + result.encryptedFileLink
+        ))
     }
 
     // Download endpoint
