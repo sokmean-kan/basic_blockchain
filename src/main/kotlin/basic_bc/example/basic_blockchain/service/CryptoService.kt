@@ -36,7 +36,7 @@ class CryptoService(private val userKeyRepository: UserKeyRepository) {
     private fun oaepParams() = OAEPParameterSpec(
         "SHA-256",
         "MGF1",
-        MGF1ParameterSpec.SHA256,  // ✅ Match Python bot
+        MGF1ParameterSpec.SHA256,
         PSource.PSpecified.DEFAULT
     )
 
@@ -55,7 +55,6 @@ class CryptoService(private val userKeyRepository: UserKeyRepository) {
     // ─── Pure RSA Decrypt ─────────────────────────────────
     fun rsaDecrypt(encryptedData: String, base64PrivateKey: String): String {
         val privateKey = loadPrivateKey(base64PrivateKey)
-        println("This is privateKey= $privateKey")
         return decryptMessage(privateKey, encryptedData)
     }
 

@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.ResponseStatus
+import org.springframework.web.method.annotation.HandlerMethodValidationException
 
 @ControllerAdvice
 class GlobalExceptionHandler {
@@ -56,5 +58,39 @@ class GlobalExceptionHandler {
     fun errorExceptionResponse(ex: ErrorExceptionResponse): ResponseEntity<Status> {
         val errorResponse = Status(errorCode = 3, errorMessage = ex.message ?: "Ruk ot see")
         return ResponseEntity(errorResponse, HttpStatus.NOT_FOUND)
+    }
+
+    // Handles @RequestParam validation failures
+    @ExceptionHandler(HandlerMethodValidationException::class)
+    fun handleHandlerMethodValidation(ex: HandlerMethodValidationException): ResponseEntity<ErrorResponse> {
+        val errors = ex.parameterValidationResults.flatMap { result ->
+            result.resolvableErrors.map { error ->
+                FieldError(
+                    field = result.methodParameter.parameterName ?: "unknown",
+                    message = error.defaultMessage ?: "Invalid value"
+                )
+            }
+        }
+
+        return ResponseEntity.badRequest().body(
+            ErrorResponse(
+                status = Status(errorCode = 1, errorMessage = "Invalid values in form-data!"),
+                data = errors
+            )
+        )
+    }
+    //Validate file
+    @ExceptionHandler(IllegalArgumentException::class)
+    fun handleIllegalArgument(ex: IllegalArgumentException): ResponseEntity<ErrorResponse> {
+
+        return ResponseEntity.badRequest().body(
+            ErrorResponse(
+                status = Status(errorCode = 1, errorMessage = "Invalid values in form-data!"),
+                data = listOf(FieldError(
+                    field = "file",
+                    message = ex.message ?: "Invalid values file in form-data!"
+                ))
+            )
+        )
     }
 }

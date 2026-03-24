@@ -1,25 +1,21 @@
 package basic_bc.example.basic_blockchain.service
 
 import basic_bc.example.basic_blockchain.dto.response.EncryptFileResponse
-import basic_bc.example.basic_blockchain.exception.ErrorExceptionResponse
+import basic_bc.example.basic_blockchain.dto.response.Status
 import basic_bc.example.basic_blockchain.exception.ResourceNotFoundException
 import basic_bc.example.basic_blockchain.repository.UserKeyRepository
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
-import java.security.KeyFactory
-import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.OAEPParameterSpec
-import javax.crypto.spec.PSource
-import java.security.spec.MGF1ParameterSpec
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.security.KeyFactory
+import java.security.spec.MGF1ParameterSpec
 import java.security.spec.PKCS8EncodedKeySpec
-import java.util.UUID
-import javax.crypto.spec.SecretKeySpec
+import java.security.spec.X509EncodedKeySpec
+import java.util.*
+import javax.crypto.Cipher
+import javax.crypto.KeyGenerator
+import javax.crypto.spec.*
 
 @Service
 class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
@@ -31,12 +27,15 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
     }
 
     fun encryptFile(username: String, file: MultipartFile): EncryptFileResponse {
+        if (file.isEmpty) {
+            throw ResourceNotFoundException("Field can't be empty")
+        }
         val maxFileSize = 50 * 1024 * 1024 // 50MB in bytes
         if (file.size > maxFileSize) {
-            throw ErrorExceptionResponse("File size exceeds the maximum allowed size of 50MB")
+            throw ResourceNotFoundException("File size exceeds the maximum allowed size of 50MB")
         }
         val user = userKeyRepository.findByUsernameIgnoreCase(username = username)
-            ?: throw ErrorExceptionResponse("User not found: $username")
+            ?: throw ResourceNotFoundException("User not found: $username")
         // 1. Decode public key
         val publicKeyBytes = Base64.getDecoder().decode(user.publicKey)
         val publicKey = KeyFactory.getInstance("RSA")
@@ -48,11 +47,11 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         }.generateKey()
 
         // 3. Generate random IV
-        val iv = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }
-        val ivSpec = IvParameterSpec(iv)
+        val iv = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }/////////////////
+        val ivSpec = IvParameterSpec(iv)/////////////////
 
         // 4. Encrypt file with AES
-        val aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        val aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")/////////////////
         aesCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
         val encryptedFileBytes = aesCipher.doFinal(file.bytes)
 
@@ -78,10 +77,12 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         val encryptedKeyBase64 = Base64.getEncoder().encodeToString(encryptedAesKey)
         val ivBase64 = Base64.getEncoder().encodeToString(iv)  // ← convert IV to Base64 first
         return EncryptFileResponse(
+            Status(0,"Success hz"),
             encryptedKey = "$encryptedKeyBase64.$ivBase64", //plit it as two part by "."
             encryptedFileLink = fileName
         )
     }
+
     fun decryptFile(privateKeyBase64: String, encryptedKeyWithIv: String, encFile: MultipartFile): ByteArray {
         // 1. Decode private key
         val privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64)
@@ -91,7 +92,7 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         // 2. Split encryptedKey and IV
         val parts = encryptedKeyWithIv.split(".")
         val encryptedAesKey = Base64.getDecoder().decode(parts[0])
-        val iv = Base64.getDecoder().decode(parts[1]) //Or get from file as line 104
+        val iv = Base64.getDecoder().decode(parts[1]) //Or get from file as line below
 
         // 3. Decrypt AES key with RSA private key
         val rsaCipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding")
@@ -109,10 +110,12 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
 //        val iv = allBytes.sliceArray(0 until 16)
 
         // SKIP first 16 bytes (IV)
-        val encryptedFileBytes = allBytes.copyOfRange(16, allBytes.size) //or allBytes.sliceArray(16 until allBytes.size)
+        val encryptedFileBytes =
+            allBytes.copyOfRange(16, allBytes.size) //or allBytes.sliceArray(16 until allBytes.size)
 
         // 5. Decrypt file with AES
         val aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        val gcmSpec = GCMParameterSpec(128, iv)
         aesCipher.init(Cipher.DECRYPT_MODE, aesKey, IvParameterSpec(iv))
 
         return aesCipher.doFinal(encryptedFileBytes)
