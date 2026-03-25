@@ -19,7 +19,7 @@ import javax.crypto.spec.SecretKeySpec
 @Service
 class CryptoService(private val userKeyRepository: UserKeyRepository) {
 
-    // ─── Load Keys ────────────────────────────────────────
+    // -----------Load Keys-------------
     private fun loadPublicKey(base64PublicKey: String): PublicKey {
         val bytes = Base64.getDecoder().decode(base64PublicKey)
         return KeyFactory.getInstance("RSA")
@@ -31,8 +31,8 @@ class CryptoService(private val userKeyRepository: UserKeyRepository) {
         return KeyFactory.getInstance("RSA")
             .generatePrivate(PKCS8EncodedKeySpec(bytes))
     }
-
-    // ─── OAEP Params ──────────────────────────────────────
+    //---------------------------------
+    // OAEP Params
     private fun oaepParams() = OAEPParameterSpec(
         "SHA-256",
         "MGF1",
@@ -40,7 +40,7 @@ class CryptoService(private val userKeyRepository: UserKeyRepository) {
         PSource.PSpecified.DEFAULT
     )
 
-    // ─── Pure RSA Encrypt ─────────────────────────────────
+    // Pure RSA Encrypt
     fun rsaEncrypt(data: String, username: String): String {
         val user = userKeyRepository.findByUsernameIgnoreCase(username)
             ?: throw (ResourceNotFoundException("Not found username"))
@@ -52,13 +52,13 @@ class CryptoService(private val userKeyRepository: UserKeyRepository) {
         return Base64.getEncoder().encodeToString(encryptedBytes)
     }
 
-    // ─── Pure RSA Decrypt ─────────────────────────────────
+    // Pure RSA Decrypt
     fun rsaDecrypt(encryptedData: String, base64PrivateKey: String): String {
         val privateKey = loadPrivateKey(base64PrivateKey)
         return decryptMessage(privateKey, encryptedData)
     }
 
-    // ─── Hybrid Encrypt (AES + RSA) ───────────────────────
+    // Hybrid Encrypt (AES + RSA)
     fun hybridEncrypt(data: String, username: String): String {
         val user = userKeyRepository.findByUsernameIgnoreCase(username)
             ?: throw (ResourceNotFoundException("Not found username"))
@@ -87,7 +87,7 @@ class CryptoService(private val userKeyRepository: UserKeyRepository) {
                 )
     }
 
-    // ─── Hybrid Decrypt (AES + RSA) ───────────────────────
+    //Hybrid Decrypt (AES + RSA)
     fun hybridDecrypt(encryptedCombined: String, base64PrivateKey: String): String {
         val privateKey = loadPrivateKey(base64PrivateKey)
 

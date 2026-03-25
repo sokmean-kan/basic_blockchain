@@ -15,7 +15,6 @@ class CryptoController(
     private val cryptoService: CryptoService
 ) {
 
-    // ─── RSA Encrypt ──────────────────────────────────────
     @PostMapping("/rsa/encrypt")
     fun rsaEncrypt(@RequestBody request: EncryptRequest1): ResponseEntity<EncryptResponse1> {
         val encrypted = cryptoService.rsaEncrypt(
@@ -25,7 +24,6 @@ class CryptoController(
         return ResponseEntity.ok(EncryptResponse1(encryptedData = encrypted))
     }
 
-    // ─── RSA Decrypt ──────────────────────────────────────
     @PostMapping("/rsa/decrypt")
     fun rsaDecrypt(@RequestBody request: DecryptRequest1): ResponseEntity<DecryptResponse1> {
         val decrypted = cryptoService.rsaDecrypt(
@@ -35,7 +33,6 @@ class CryptoController(
         return ResponseEntity.ok(DecryptResponse1(plainText = decrypted))
     }
 
-    // ─── Hybrid Encrypt ───────────────────────────────────
     @PostMapping("/hybrid/encrypt")
     fun hybridEncrypt(@RequestBody request: EncryptRequest1): ResponseEntity<EncryptResponse1> {
         val encrypted = cryptoService.hybridEncrypt(
@@ -45,7 +42,6 @@ class CryptoController(
         return ResponseEntity.ok(EncryptResponse1(encryptedData = encrypted))
     }
 
-    // ─── Hybrid Decrypt ───────────────────────────────────
     @PostMapping("/hybrid/decrypt")
     fun hybridDecrypt(@RequestBody request: DecryptRequest1): ResponseEntity<DecryptResponse1> {
         val decrypted = cryptoService.hybridDecrypt(
