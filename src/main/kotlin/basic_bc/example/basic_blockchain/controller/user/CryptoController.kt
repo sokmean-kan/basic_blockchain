@@ -8,6 +8,7 @@ import basic_bc.example.basic_blockchain.service.CryptoService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
+@CrossOrigin(origins = ["*"], allowedHeaders = ["*"])
 @RestController
 @RequestMapping("/api/crypto")
 class CryptoController(

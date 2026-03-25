@@ -4,8 +4,11 @@ import basic_bc.example.basic_blockchain.dto.response.EncryptFileResponse
 import basic_bc.example.basic_blockchain.dto.response.Status
 import basic_bc.example.basic_blockchain.exception.ResourceNotFoundException
 import basic_bc.example.basic_blockchain.repository.UserKeyRepository
+import org.springframework.http.MediaType
+import org.springframework.http.MediaTypeFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
@@ -28,7 +31,7 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
 
     fun encryptFile(username: String, file: MultipartFile): EncryptFileResponse {
         if (file.isEmpty) {
-            throw ResourceNotFoundException("Field can't be empty")
+            throw ResourceNotFoundException("Field file can't be empty")
         }
         val maxFileSize = 50 * 1024 * 1024 // 50MB in bytes
         if (file.size > maxFileSize) {
@@ -47,12 +50,13 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         }.generateKey()
 
         // 3. Generate random IV
-        val iv = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }/////////////////
-        val ivSpec = IvParameterSpec(iv)/////////////////
+        val iv = ByteArray(12).also { java.security.SecureRandom().nextBytes(it) }/////////////////
+//        val ivSpec = IvParameterSpec(iv)/////////////////
 
         // 4. Encrypt file with AES
-        val aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")/////////////////
-        aesCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivSpec)
+        val aesCipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val gcmSpec = GCMParameterSpec(128, iv)
+        aesCipher.init(Cipher.ENCRYPT_MODE, aesKey, gcmSpec)
         val encryptedFileBytes = aesCipher.doFinal(file.bytes)
 
         // 5. Encrypt AES key with RSA public key
@@ -68,10 +72,23 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         // 6. Save encrypted file to disk
         val fileName = "${UUID.randomUUID()}.enc"
         val filePath = Paths.get(storageDir, fileName)
+//        =====>V1:
+//        // Write IV + encrypted file bytes together
+//        val outputBytes = encryptedFileBytes //iv + encryptedFileBytes
+//        Files.write(filePath, outputBytes)
 
-        // Write IV + encrypted file bytes together
-        val outputBytes = iv + encryptedFileBytes
+//        =====>V2&V3: take original extension
+        val originalExtension = file.originalFilename
+            ?.substringAfterLast(".", "")
+            ?: ""
+
+        // Build output: [4 bytes ext length][ext bytes][encrypted bytes]
+        val extBytes = originalExtension.toByteArray(Charsets.UTF_8)
+        val extLength = ByteBuffer.allocate(4).putInt(extBytes.size).array()
+
+        val outputBytes = extLength + extBytes + encryptedFileBytes
         Files.write(filePath, outputBytes)
+//        ============
 
         // 7. Build response
         val encryptedKeyBase64 = Base64.getEncoder().encodeToString(encryptedAesKey)
@@ -83,7 +100,10 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         )
     }
 
-    fun decryptFile(privateKeyBase64: String, encryptedKeyWithIv: String, encFile: MultipartFile): ByteArray {
+    fun decryptFile(privateKeyBase64: String, encryptedKeyWithIv: String, encFile: MultipartFile): Pair<ByteArray, String> {
+        if (encFile.isEmpty) {
+            throw ResourceNotFoundException("Field file can't be empty")
+        }
         // 1. Decode private key
         val privateKeyBytes = Base64.getDecoder().decode(privateKeyBase64)
         val privateKey = KeyFactory.getInstance("RSA")
@@ -105,19 +125,64 @@ class EncryptFileService(private val userKeyRepository: UserKeyRepository) {
         val aesKeyBytes = rsaCipher.doFinal(encryptedAesKey)
         val aesKey = SecretKeySpec(aesKeyBytes, "AES")
 
+//        =====>V1: need to add extension manaul when download
+//        // 4. Read encrypted file bytes
+//        val allBytes = encFile.bytes
+////        val iv = allBytes.sliceArray(0 until 16)
+//
+//        // SKIP first 16 bytes (IV)
+//        val encryptedFileBytes = allBytes
+////            allBytes.copyOfRange(12, allBytes.size) //or allBytes.sliceArray(16 until allBytes.size)
+//
+//        // 5. Decrypt file with AES
+//        val aesCipher = Cipher.getInstance("AES/GCM/NoPadding")
+//        val gcmSpec = GCMParameterSpec(128, iv)
+//        aesCipher.init(Cipher.DECRYPT_MODE, aesKey, gcmSpec)
+//
+//        return aesCipher.doFinal(encryptedFileBytes) //e.g. ByteArray
+
+
+//        =====>V2&V3: Auto get original extension
         // 4. Read encrypted file bytes
         val allBytes = encFile.bytes
-//        val iv = allBytes.sliceArray(0 until 16)
 
-        // SKIP first 16 bytes (IV)
-        val encryptedFileBytes =
-            allBytes.copyOfRange(16, allBytes.size) //or allBytes.sliceArray(16 until allBytes.size)
+// Parse header: read extension
+        val extLength = ByteBuffer.wrap(allBytes.sliceArray(0 until 4)).int
+        val extBytes = allBytes.sliceArray(4 until 4 + extLength)
+        val fileExtension = String(extBytes, Charsets.UTF_8)
 
-        // 5. Decrypt file with AES
-        val aesCipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+// Rest is the actual encrypted content
+        val encryptedFileBytes = allBytes.copyOfRange(4 + extLength, allBytes.size)
+
+// 5. Decrypt file with AES
+        val aesCipher = Cipher.getInstance("AES/GCM/NoPadding")
         val gcmSpec = GCMParameterSpec(128, iv)
-        aesCipher.init(Cipher.DECRYPT_MODE, aesKey, IvParameterSpec(iv))
+        aesCipher.init(Cipher.DECRYPT_MODE, aesKey, gcmSpec)
+        val decryptedBytes = aesCipher.doFinal(encryptedFileBytes)
 
-        return aesCipher.doFinal(encryptedFileBytes)
+// Return with extension info — update return type or handle accordingly
+        return Pair(decryptedBytes, fileExtension) // e.g. Pair<ByteArray, String>
+    }
+
+//    V3.2
+    //========Manage extension =============
+    val customMimeTypes = mapOf( // add manaul that spring not support
+        "heic" to "image/heic",
+        "heif" to "image/heif",
+        "webp" to "image/webp",
+        "avif" to "image/avif",
+    )
+
+    fun getContentType(extension: String): String {
+        val ext = extension.lowercase()
+
+        // 1. check custom types first
+        customMimeTypes[ext]?.let { return it }
+
+        // 2. fallback to Spring MediaTypeFactory
+        return MediaTypeFactory
+            .getMediaType("file.$ext")
+            .orElse(MediaType.APPLICATION_OCTET_STREAM)
+            .toString()
     }
 }
